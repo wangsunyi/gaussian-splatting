@@ -54,6 +54,9 @@ class ModelParams(ParamGroup):
         self._white_background = False
         self.data_device = "cuda"
         self.eval = False
+        self.debug_cuda = False
+        self.global_shs_degree = 3
+        self.env_resolution = 16
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):
@@ -63,9 +66,13 @@ class ModelParams(ParamGroup):
 
 class PipelineParams(ParamGroup):
     def __init__(self, parser):
-        self.convert_SHs_python = False
+        self.compute_SHs_python = False
         self.compute_cov3D_python = False
+        self.tracing = False
+        self.sample_num = 64
         self.debug = False
+        self.save_training_vis = False
+        self.save_training_vis_iteration = 1000
         super().__init__(parser, "Pipeline Parameters")
 
 class OptimizationParams(ParamGroup):
@@ -75,10 +82,53 @@ class OptimizationParams(ParamGroup):
         self.position_lr_final = 0.0000016
         self.position_lr_delay_mult = 0.01
         self.position_lr_max_steps = 30_000
+
+        self.normal_lr = 0.01
+        self.sh_lr = 0.0025
         self.feature_lr = 0.0025
         self.opacity_lr = 0.05
         self.scaling_lr = 0.005
         self.rotation_lr = 0.001
+        self.env_lr = 0.1
+        self.env_rest_lr = 0.001
+
+        self.percent_dense = 0.001
+        self.densification_interval = 100
+        self.opacity_reset_interval = 3000
+        self.densify_from_iter = 500
+        self.densify_until_iter = 10_000
+
+        self.densify_grad_threshold = 0.0002
+        self.densify_grad_normal_threshold = 2e-9
+        self.normal_densify_from_iter = 0
+
+        self.lambda_depth = 0.0
+        self.lambda_depth_smooth = 0.0
+        self.lambda_mask_entropy = 0.0
+
+        self.lambda_opacity = 0.0
+        self.lambda_opacity_start_iteration = 5000
+        self.lambda_surface = 0.0
+
+        self.lambda_normal_render_depth = 0.0
+        self.lambda_normal_mvs_depth = 0.0
+        self.lambda_normal_smooth = 0.0
+        self.lambda_point_entropy = 0.0
+        self.lambda_orientation = 0.0
+        self.lambda_orientation_from_iter = 5000
+        self.lambda_depth_var = 0.0
+        self.lambda_scaling = 0.0
+
+        self.lambda_dssim = 0.2
+        self.lambda_pbr = 1
+        self.lambda_light = 0.0
+        self.lambda_base_color = 0.0
+        self.lambda_base_color_smooth = 0.0
+        self.lambda_roughness_smooth = 0.0
+        self.lambda_light_smooth = 0.0
+        self.lambda_visibility_smooth = 0.0
+        self.lambda_visibility = 0.0
+        self.lambda_env_smooth = 0.0
         self.percent_dense = 0.01
         self.lambda_dssim = 0.2
         self.densification_interval = 100

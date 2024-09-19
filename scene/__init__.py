@@ -22,7 +22,7 @@ class Scene:
 
     gaussians : GaussianModel
 
-    def __init__(self, args : ModelParams, gaussians : GaussianModel, load_iteration=None, shuffle=True, resolution_scales=[1.0]):
+    def __init__(self, args: ModelParams, gaussians : GaussianModel, load_iteration=None, shuffle=True, resolution_scales=[1.0]):
         """b
         :param path: Path to colmap scene main folder.
         """
@@ -43,8 +43,23 @@ class Scene:
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
-            print("Found transforms_train.json file, assuming Blender data set!")
-            scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.eval)
+            if "stanford_orb" in args.source_path:
+                print("Found keyword stanford_orb, assuming Stanford ORB data set!")
+                scene_info = sceneLoadTypeCallbacks["StanfordORB"](args.source_path, args.white_background, args.eval,
+                                                                   debug=args.debug_cuda)
+            elif "Synthetic4Relight" in args.source_path:
+                print("Found transforms_train.json file, assuming Synthetic4Relight data set!")
+                scene_info = sceneLoadTypeCallbacks["Synthetic4Relight"](args.source_path, args.white_background, args.eval,
+                                                            debug=args.debug_cuda)
+            else:
+                print("Found transforms_train.json file, assuming Blender data set!")
+                scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.eval,
+                                                               debug=args.debug_cuda)
+
+        elif os.path.exists(os.path.join(args.source_path, "inputs/sfm_scene.json")):
+            print("Found sfm_scene.json file, assuming NeILF data set!")
+            scene_info = sceneLoadTypeCallbacks["NeILF"](args.source_path, args.white_background, args.eval,
+                                                         debug=args.debug_cuda)
         else:
             assert False, "Could not recognize scene type!"
 
@@ -74,13 +89,14 @@ class Scene:
             print("Loading Test Cameras")
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.test_cameras, resolution_scale, args)
 
-        if self.loaded_iter:
-            self.gaussians.load_ply(os.path.join(self.model_path,
-                                                           "point_cloud",
-                                                           "iteration_" + str(self.loaded_iter),
-                                                           "point_cloud.ply"))
-        else:
-            self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent)
+        self.scene_info = scene_info
+       # if self.loaded_iter:
+        #    self.gaussians.load_ply(os.path.join(self.model_path,
+        #                                                  "point_cloud",
+        #                                                 "iteration_" + str(self.loaded_iter),
+        #                                                   "point_cloud.ply"))
+       # else:
+        #    self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent)
 
     def save(self, iteration):
         point_cloud_path = os.path.join(self.model_path, "point_cloud/iteration_{}".format(iteration))
