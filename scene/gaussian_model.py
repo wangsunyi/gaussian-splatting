@@ -22,6 +22,7 @@ from pyhocon import ConfigFactory
 from utils.graphics_utils import BasicPointCloud
 from utils.general_utils import strip_symmetric, build_scaling_rotation
 from sdf.models.fields import SDFNetwork
+from  sdf.models.dataset import Dataset
 class GaussianModel:
 
     def setup_functions(self):
@@ -39,12 +40,6 @@ class GaussianModel:
 
         self.opacity_activation = torch.sigmoid
         self.inverse_opacity_activation = inverse_sigmoid
-        self.sdf_conf_path = "E:\wangsunyy\gaussian-splatting\sdf\confs\wmask.conf"
-        f = open(self.sdf_conf_path)
-        conf_text = f.read()
-        f.close()
-
-        self.conf = ConfigFactory.parse_string(conf_text)
 
         self.rotation_activation = torch.nn.functional.normalize
 
