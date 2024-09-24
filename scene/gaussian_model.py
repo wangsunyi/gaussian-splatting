@@ -22,7 +22,9 @@ from pyhocon import ConfigFactory
 from utils.graphics_utils import BasicPointCloud
 from utils.general_utils import strip_symmetric, build_scaling_rotation
 from sdf.models.fields import SDFNetwork
-from  sdf.models.dataset import Dataset
+from sdf.models.dataset import Dataset
+
+
 class GaussianModel:
 
     def setup_functions(self):
@@ -32,7 +34,7 @@ class GaussianModel:
             symm = strip_symmetric(actual_covariance)
             return symm
 
-        self.normal_activation= lambda  x:torch.nn.functional.normalize(x, dim=-1, eps=1e-3)
+        self.normal_activation= lambda x:torch.nn.functional.normalize(x, dim=-1, eps=1e-3)
         self.scaling_activation = torch.exp
         self.scaling_inverse_activation = torch.log
 
@@ -44,7 +46,7 @@ class GaussianModel:
         self.rotation_activation = torch.nn.functional.normalize
 
 
-    def __init__(self,sh_degree : int):
+    def __init__(self,sh_degree : int, conf_path, case='CASE_NAME'):
         self.active_sh_degree = 3
         self.max_sh_degree = sh_degree  
         self._xyz = torch.empty(0)
@@ -67,6 +69,15 @@ class GaussianModel:
         self.setup_functions()
         self.transform ={}
         self.base_color_scale=torch.ones(3, dtype=torch.float, device="cuda")
+
+        self.conf_path=conf_path
+        f=open(self.conf_path)
+        conf_text=f.read()
+        conf_text = conf_text.replace('CASE_NAME', case)
+        f.close()
+
+        self.conf = ConfigFactory.parse_string(conf_text)
+        self.conf['dataset.data_dir'] = self.conf['dataset.data_dir'].replace('CASE_NAME', case)
         self.sdf_network = SDFNetwork(**self.conf['model.sdf_network']).to(torch.device('cuda'))
 
 
@@ -156,7 +167,7 @@ class GaussianModel:
     @property
     def get_sdf(self):
         sdf_value=self.sdf_network.sdf(self._xyz)
-        return  sdf_value
+        return sdf_value
 
     @property
     def get_incidents(self):
